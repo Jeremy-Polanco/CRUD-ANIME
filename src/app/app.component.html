@@ -1,0 +1,149 @@
+<app-header />
+
+<div #openModalButton
+  class="w-16 h-16 shadow-md fixed bottom-10 right-16 cursor-pointer bg-blue-400 rounded-full grid place-content-center z-10"
+  data-modal-target="create-or-edit-modal" data-modal-toggle="create-or-edit-modal">
+  <mat-icon aria-label="add" fontIcon="add" class="text-white scale-150" />
+</div>
+
+<button #openShowAnimeModalButton class="hidden" data-modal-target="show-anime-modal"
+  data-modal-toggle="show-anime-modal"></button>
+
+<app-form-modal modalId="create-or-edit-modal" />
+<app-anime-modal modalId="show-anime-modal" />
+
+<main class="px-5">
+
+  <div class="flex items-center mt-10 max-w-[1200px] justify-between">
+    <h1 class="md:text-lg font-semibold">Listado de Animes</h1>
+
+    <form class="flex items-center max-w-lg w-full" [formGroup]="filtersForm" (submit)="filterAnimes($event)">
+      <label for="voice-search" class="sr-only">Search</label>
+      <div class="relative w-full">
+        <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+          <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+            fill="none" viewBox="0 0 20 20">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+          </svg>
+        </div>
+        <input name="title" formControlName="title" type="text" id="title-search"
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+          placeholder="Buscar por título" required />
+
+      </div>
+
+      <div class="col-span-2 pl-3">
+        <select id="genre" formControlName="genre" formControlName="genre" id="genre-search" required
+          class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full p-2.5 dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+          <option value="">Todos los géneros</option>
+          @for(genre of genres; track genres) {
+          <option [value]="genre">{{ genre }}</option>
+          }
+        </select>
+      </div>
+
+      <button type="submit"
+        class="inline-flex items-center py-2.5 px-3 ms-2 text-sm font-medium text-white bg-blue-700 rounded-lg border border-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+        <svg class="w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
+        </svg>Buscar
+      </button>
+    </form>
+
+
+  </div>
+
+  @if(animes.length > 0) {
+  <div class="mt-10">
+    @if(animes[currentPage - 1].length > 0) {
+    <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
+      <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
+        <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+          <tr>
+            @for(column of tableColumns; track column) {
+            <th scope="col" class="px-6 py-3">
+              {{ column }}
+            </th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for(anime of animes[currentPage - 1]; track anime; let index = $index) {
+          <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+            <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+              {{anime.title}}
+            </th>
+            <td class="px-6 py-4">
+              {{anime.genre}}
+            </td>
+            <td class="px-6 py-4">
+              {{anime.description}}
+            </td>
+            <td class="px-6 py-4 flex gap-3">
+              <!-- <button href="#" class="font-medium text-blue-600 dark:text-blue-500 hover:underline cursor-pointer"
+                (click)="showAnime()">
+                Ver
+              </button> -->
+
+              <button href="#" class="font-medium text-yellow-400 dark:text-yellow-500 hover:underline cursor-pointer"
+                (click)="selectAnime(anime)">
+                Editar
+              </button>
+
+              <span class="font-medium text-red-600 dark:text-red-500 hover:underline cursor-pointer"
+                (click)="deleteAnime(anime.id)">
+                Delete
+              </span>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+      <nav class="flex items-center flex-column flex-wrap md:flex-row justify-between py-4 px-4"
+        aria-label="Table navigation">
+        <span
+          class="text-sm font-normal text-gray-500 dark:text-gray-400 mb-4 md:mb-0 block w-full md:inline md:w-auto">Mostrando
+          <span class="font-semibold text-gray-900 dark:text-white">{{ (currentPage === 1 ? currentPage : (currentPage -
+            1) * 10 )
+            }} -
+            {{currentPage * 10 < totalItems ? currentPage * 10 : totalItems}}</span>
+              de <span class="font-semibold text-gray-900 dark:text-white">{{totalItems}}</span></span>
+          <ul class="inline-flex -space-x-px rtl:space-x-reverse text-sm h-8">
+            <li>
+              <button [disabled]="currentPage - 1 === 0" [class.cursor-not-allowed]="currentPage - 1 === 0"
+                class="flex items-center justify-center px-3 h-8 ms-0 leading-tight text-gray-500 bg-white border border-gray-300 rounded-s-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                (click)="onPageChange(currentPage - 1)">Atrás</button>
+            </li>
+            @for(number of [].constructor(numberOfPages); track number; let index = $index) {
+            <li>
+              <a href="#"
+                [class]="currentPage === index + 1 ? 'flex items-center justify-center px-3 h-8 text-blue-600 border border-gray-300 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white' : 'flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'"
+                (click)="onPageChange(index + 1)">{{index + 1}}</a>
+            </li>
+            }
+            <li>
+              <button [disabled]="currentPage === numberOfPages"
+                [class.cursor-not-allowed]="currentPage === numberOfPages"
+                class="flex items-center justify-center px-3 h-8 leading-tight text-gray-500 bg-white border border-gray-300 rounded-e-lg hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                (click)="onPageChange(currentPage + 1)">Continuar</button>
+            </li>
+          </ul>
+      </nav>
+    </div>
+
+    } @else {
+    <div class="flex justify-center items-center h-96">
+      <p class="text-2xl">No hay animes registrados</p>
+    </div>
+
+    }
+  </div>
+  } @else {
+  <div>
+    <h2 class="mt-10 ">No se han encontrado animes</h2>
+  </div>
+  }
+
+</main>
